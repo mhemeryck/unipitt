@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"crypto/tls"
 	"crypto/x509"
 	"flag"
@@ -14,13 +13,10 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/mhemeryck/unipitt"
 )
 
 const (
-	// Filename to check for
-	Filename = "di_value"
-	// TrueValue is the value considered to be true
-	TrueValue = "1"
 	// FolderRegex represents to regular expression used for finding the required file to read from
 	FolderRegex = "di_[0-9]_[0-9]{2}"
 	// SysFsRoot default root folder to search for digital inputs
@@ -28,64 +24,6 @@ const (
 	// Payload default MQTT payload
 	Payload = "trigger"
 )
-
-// DigitalInput interface for doing the polling
-type DigitalInput interface {
-	Update(chan *DigitalInput) error
-	Poll(chan *DigitalInput, int)
-	Close()
-}
-
-// DigitalInputReader implements the digital input interface
-type DigitalInputReader struct {
-	Topic string
-	Value bool
-	Path  string
-	f     *os.File
-}
-
-// NewDigitalInputReader creates a new DigitalInput and opens the file handle
-func NewDigitalInputReader(folder string, topic string) (d *DigitalInputReader, err error) {
-	f, err := os.Open(path.Join(folder, Filename))
-	d = &DigitalInputReader{Topic: topic, Path: folder, f: f}
-	return
-}
-
-// Update reads the value and sets the new value
-func (d *DigitalInputReader) Update(events chan *DigitalInputReader) (err error) {
-	// Read the first byte
-	d.f.Seek(0, 0)
-	b := make([]byte, 1)
-	_, err = d.f.Read(b)
-	// Check it's true
-	value := bytes.Equal(b, []byte(TrueValue))
-	// Push out an event in case of a leading edge
-	if !d.Value && value {
-		events <- d
-	}
-	// Update value
-	d.Value = value
-	return
-}
-
-// Poll continuously updates the instance
-func (d *DigitalInputReader) Poll(events chan *DigitalInputReader, pollingInterval int) (err error) {
-	ticker := time.NewTicker(time.Millisecond * time.Duration(pollingInterval)).C
-	for {
-		select {
-		case <-ticker:
-			err = d.Update(events)
-			if err != nil {
-				return
-			}
-		}
-	}
-}
-
-// Close closes the current open file handle
-func (d *DigitalInputReader) Close() {
-	d.f.Close()
-}
 
 // NewTLSConfig generates a TLS config instance for use with the MQTT setup
 func NewTLSConfig(caFile string) *tls.Config {
@@ -164,11 +102,11 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	readers := make([]DigitalInputReader, len(paths))
+	readers := make([]unipitt.DigitalInputReader, len(paths))
 	for k, folder := range paths {
 		// Read topic as the trailing folder path
 		_, topic := path.Split(folder)
-		digitalInputReader, err := NewDigitalInputReader(folder, topic)
+		digitalInputReader, err := unipitt.NewDigitalInputReader(folder, topic)
 		if err != nil {
 			log.Print(err)
 		}
@@ -176,19 +114,26 @@ func main() {
 		readers[k] = *digitalInputReader
 	}
 
-	events := make(chan *DigitalInputReader)
+	events := make(chan *unipitt.DigitalInputReader)
+	defer close(events)
 
+	ticker := time.NewTicker(time.Duration(pollingInterval) * time.Millisecond)
+	defer ticker.Stop()
 	// Start polling
 	for k := range readers {
-		go readers[k].Poll(events, pollingInterval)
+		go readers[k].Poll(events, ticker)
 	}
 
 	// Publish on a trigger
 	for {
 		select {
 		case d := <-events:
-			log.Printf("Trigger for topic %s\n", d.Topic)
-			mqttClient.Publish(d.Topic, 0, false, payload)
+			if d.Err != nil {
+				log.Printf("Found error %s for topic %s\n", d.Err, d.Topic)
+			} else {
+				log.Printf("Trigger for topic %s\n", d.Topic)
+				mqttClient.Publish(d.Topic, 0, false, payload)
+			}
 		}
 	}
 }
