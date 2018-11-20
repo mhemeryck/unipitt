@@ -13,9 +13,6 @@ install:
 script:
 - $GOPATH/bin/goveralls -service=travis-ci
 
-after_success:
-- test -n "$TRAVIS_TAG" && docker login -u=mhemeryck -p="$DOCKER_PASSWORD"
-
 deploy:
 - provider: script
   skip_cleanup: true
