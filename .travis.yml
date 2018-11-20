@@ -1,0 +1,25 @@
+language: go
+
+env:
+- DEP_VERSION=0.5.0
+
+before_install:
+- curl https://raw.githubusercontent.com/golang/dep/v${DEP_VERSION}/install.sh | sh
+- go get github.com/mattn/goveralls
+
+install:
+- dep ensure -vendor-only
+
+script:
+- $GOPATH/bin/goveralls -service=travis-ci
+
+after_success:
+- test -n "$TRAVIS_TAG" && docker login -u=mhemeryck -p="$DOCKER_PASSWORD"
+
+deploy:
+- provider: script
+  skip_cleanup: true
+  script: curl -sL https://git.io/goreleaser | bash
+  on:
+    tags: true
+    condition: $TRAVIS_OS_NAME = linux
