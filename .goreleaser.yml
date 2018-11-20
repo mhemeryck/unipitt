@@ -1,0 +1,20 @@
+builds:
+-
+  main: ./cmd/main.go
+  env:
+  - CGO_ENABLED=0
+  goos:
+  - linux
+  goarch:
+  - amd64
+  - arm
+  goarm:
+  - 7
+archive:
+  replacements:
+    linux: Linux
+    amd64: x86_64
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Commit }}"
