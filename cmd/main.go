@@ -1,10 +1,7 @@
 package main
 
 import (
-	"crypto/tls"
-	"crypto/x509"
 	"flag"
-	"io/ioutil"
 	"log"
 	"time"
 
@@ -32,30 +29,6 @@ func printVersionInfo() {
 	}
 	for key, value := range info {
 		log.Printf("%s: %s\n", key, value)
-	}
-}
-
-// NewTLSConfig generates a TLS config instance for use with the MQTT setup
-func NewTLSConfig(caFile string) *tls.Config {
-	// Read the ceritifcates from the system, continue with empty pool in case of failure
-	rootCAs, _ := x509.SystemCertPool()
-	if rootCAs == nil {
-		rootCAs = x509.NewCertPool()
-	}
-
-	// Read the local file from the supplied path
-	certs, err := ioutil.ReadFile(caFile)
-	if err != nil {
-		log.Fatalf("Failed to append %q to RootCAs: %v", caFile, err)
-	}
-	// Append our cert to the system pool
-	if ok := rootCAs.AppendCertsFromPEM(certs); !ok {
-		log.Println("No certs appended, using system certs only")
-	}
-
-	// Trust the augmented cert pool in our client
-	return &tls.Config{
-		RootCAs: rootCAs,
 	}
 }
 
@@ -87,8 +60,12 @@ func main() {
 	opts.AddBroker(broker)
 	opts.SetClientID(clientID)
 	if caFile != "" {
-		tlsConfig := NewTLSConfig(caFile)
-		opts.SetTLSConfig(tlsConfig)
+		tlsConfig, err := unipitt.NewTLSConfig(caFile)
+		if err != nil {
+			log.Printf("Error reading MQTT CA file %s: %s\n", caFile, err)
+		} else {
+			opts.SetTLSConfig(tlsConfig)
+		}
 	}
 	mqttClient := mqtt.NewClient(opts)
 	token := mqttClient.Connect()
