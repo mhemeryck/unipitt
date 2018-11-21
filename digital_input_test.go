@@ -1,6 +1,7 @@
 package unipitt
 
 import (
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -214,5 +215,33 @@ func TestPollError(t *testing.T) {
 
 	if d.Err == nil {
 		t.Fatal("Expected an error on the returned digital input, found none")
+	}
+}
+
+func TestFindDigitalInputPaths(t *testing.T) {
+	folder := "di_1_01"
+	// Create temporary folder, only if it does not exist already
+	root, err := ioutil.TempDir("", "unipitt")
+	if err != nil {
+		t.Fatal(err)
+	}
+	dir := filepath.Join(root, folder)
+	if _, pathErr := os.Stat(dir); pathErr != nil {
+		err := os.Mkdir(dir, os.ModePerm)
+		if err != nil {
+			t.Fail()
+		}
+	}
+	defer os.RemoveAll(root) // clean up
+
+	// Find
+	paths, err := findDigitalInputPaths(root)
+
+	// Check output
+	if err != nil {
+		t.Fail()
+	}
+	if len(paths) != 1 {
+		t.Fatalf("Expected to find 1 matching path, found %d\n", len(paths))
 	}
 }

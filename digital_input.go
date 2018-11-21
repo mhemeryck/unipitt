@@ -5,6 +5,8 @@ import (
 	"log"
 	"os"
 	"path"
+	"path/filepath"
+	"regexp"
 	"time"
 )
 
@@ -13,6 +15,10 @@ const (
 	Filename = "di_value"
 	// TrueValue is the value considered to be true
 	TrueValue = "1"
+	// FolderRegex represents to regular expression used for finding the required file to read from
+	FolderRegex = "di_[0-9]_[0-9]{2}"
+	// SysFsRoot default root folder to search for digital inputs
+	SysFsRoot = "/sys/devices/platform/unipi_plc"
 )
 
 // DigitalInput interface for doing the polling
@@ -74,4 +80,22 @@ func (d *DigitalInputReader) Poll(events chan *DigitalInputReader, ticker *time.
 // Close closes the current open file handle
 func (d *DigitalInputReader) Close() error {
 	return d.f.Close()
+}
+
+// findDigitalInputPaths finds all digital inputs in a given root folder
+func findDigitalInputPaths(root string) (paths []string, err error) {
+	// Compile regex first
+	regex, err := regexp.Compile(FolderRegex)
+	// Walk the folder structure
+	err = filepath.Walk(root,
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if regex.MatchString(info.Name()) {
+				paths = append(paths, path)
+			}
+			return err
+		})
+	return
 }
