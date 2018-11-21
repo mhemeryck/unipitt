@@ -56,6 +56,7 @@ func (d *DigitalInputReader) Update(events chan *DigitalInputReader) (err error)
 
 // Poll continuously updates the instance
 func (d *DigitalInputReader) Poll(events chan *DigitalInputReader, ticker *time.Ticker) {
+	count := 0
 	for {
 		select {
 		case <-ticker.C:
@@ -63,9 +64,14 @@ func (d *DigitalInputReader) Poll(events chan *DigitalInputReader, ticker *time.
 			if err != nil {
 				d.Err = err
 				events <- d
-				log.Println("Error polling the digital input")
+				log.Printf("Error polling digital input with topic %s\n", d.Topic)
 				return
 			}
+			if count%100 == 0 {
+				count = 0
+				log.Printf("Polling digital input %s ...\n", d.Topic)
+			}
+			count++
 		}
 	}
 }
@@ -108,6 +114,7 @@ func FindDigitalInputReaders(root string) (readers []DigitalInputReader, err err
 		log.Println(err)
 		return
 	}
+	log.Printf("Found %d matching digital input paths\n", len(paths))
 	readers = make([]DigitalInputReader, len(paths))
 	for k, folder := range paths {
 		// Read topic as the trailing folder path
