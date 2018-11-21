@@ -16,6 +16,9 @@ import (
 	"github.com/mhemeryck/unipitt"
 )
 
+// Current program version info, injected at build time
+var version, commit, date string
+
 const (
 	// FolderRegex represents to regular expression used for finding the required file to read from
 	FolderRegex = "di_[0-9]_[0-9]{2}"
@@ -24,6 +27,19 @@ const (
 	// Payload default MQTT payload
 	Payload = "trigger"
 )
+
+// printVersionInfo prints the current version info, where the values are injected at build time with goreleaser
+func printVersionInfo() {
+	log.Println("UnipiTT")
+	var info = map[string]string{
+		"Version": version,
+		"Commit":  commit,
+		"Date":    date,
+	}
+	for key, value := range info {
+		log.Printf("%s: %s\n", key, value)
+	}
+}
 
 // NewTLSConfig generates a TLS config instance for use with the MQTT setup
 func NewTLSConfig(caFile string) *tls.Config {
@@ -69,6 +85,8 @@ func findDigitalInputPaths(root string) (paths []string, err error) {
 
 func main() {
 	// Arguments
+	var showVersion bool
+	flag.BoolVar(&showVersion, "version", false, "Print version info and exit")
 	var pollingInterval int
 	flag.IntVar(&pollingInterval, "polling_interval", 50, "Polling interval for one coil group in millis")
 	var caFile string
@@ -83,6 +101,11 @@ func main() {
 	flag.StringVar(&payload, "payload", Payload, "Default MQTT message payload")
 	flag.Parse()
 
+	// Show version and exit
+	if showVersion {
+		printVersionInfo()
+		return
+	}
 	// MQTT setup
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(broker)
