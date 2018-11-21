@@ -245,3 +245,39 @@ func TestFindDigitalInputPaths(t *testing.T) {
 		t.Fatalf("Expected to find 1 matching path, found %d\n", len(paths))
 	}
 }
+
+func TestFindDigitalInputReaders(t *testing.T) {
+	folder := "di_1_01"
+	// Create temporary folder, only if it does not exist already
+	root, err := ioutil.TempDir("", "unipitt")
+	if err != nil {
+		t.Fatal(err)
+	}
+	dir := filepath.Join(root, folder)
+	if _, pathErr := os.Stat(dir); pathErr != nil {
+		err := os.Mkdir(dir, os.ModePerm)
+		if err != nil {
+			t.Fail()
+		}
+	}
+	defer os.RemoveAll(root) // clean up
+
+	readers, err := FindDigitalInputReaders(root)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(readers) != 1 {
+		t.Fatalf("Expected 1 reader to be found, found %d\n", len(readers))
+	}
+	if readers[0].Topic != folder {
+		t.Fatalf("Expected topic to be %s, found %s\n", folder, readers[0].Topic)
+	}
+}
+
+func TestFindDigitalInputReadersNonExisting(t *testing.T) {
+	_, err := FindDigitalInputReaders("foo")
+	if err == nil {
+		t.Fatal(err)
+	}
+}
