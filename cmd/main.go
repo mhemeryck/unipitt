@@ -101,6 +101,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Printf("Created %d digital input reader instances from path %s\n", len(readers), sysfsRoot)
 	for k := range readers {
 		defer readers[k].Close()
 	}
@@ -113,6 +114,7 @@ func main() {
 
 	// Start polling
 	for k := range readers {
+		log.Printf("Initiate polling for %d readers\n", len(readers))
 		go readers[k].Poll(events, ticker)
 	}
 
