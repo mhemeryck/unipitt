@@ -6,10 +6,6 @@ import (
 	"flag"
 	"io/ioutil"
 	"log"
-	"os"
-	"path"
-	"path/filepath"
-	"regexp"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -20,8 +16,6 @@ import (
 var version, commit, date string
 
 const (
-	// FolderRegex represents to regular expression used for finding the required file to read from
-	FolderRegex = "di_[0-9]_[0-9]{2}"
 	// SysFsRoot default root folder to search for digital inputs
 	SysFsRoot = "/sys/devices/platform/unipi_plc"
 	// Payload default MQTT payload
@@ -65,24 +59,6 @@ func NewTLSConfig(caFile string) *tls.Config {
 	}
 }
 
-// findDigitalInputPaths finds all digital inputs in a given root folder
-func findDigitalInputPaths(root string) (paths []string, err error) {
-	// Compile regex first
-	regex, err := regexp.Compile(FolderRegex)
-	// Walk the folder structure
-	err = filepath.Walk(root,
-		func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-			if regex.MatchString(info.Name()) {
-				paths = append(paths, path)
-			}
-			return err
-		})
-	return
-}
-
 func main() {
 	// Arguments
 	var showVersion bool
@@ -121,20 +97,12 @@ func main() {
 	}
 
 	// Setup digital input
-	paths, err := findDigitalInputPaths(sysfsRoot)
+	readers, err := unipitt.FindDigitalInputReaders(sysfsRoot)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatal(err)
 	}
-	readers := make([]unipitt.DigitalInputReader, len(paths))
-	for k, folder := range paths {
-		// Read topic as the trailing folder path
-		_, topic := path.Split(folder)
-		digitalInputReader, err := unipitt.NewDigitalInputReader(folder, topic)
-		if err != nil {
-			log.Print(err)
-		}
-		defer digitalInputReader.Close()
-		readers[k] = *digitalInputReader
+	for k := range readers {
+		defer readers[k].Close()
 	}
 
 	events := make(chan *unipitt.DigitalInputReader)
@@ -142,6 +110,7 @@ func main() {
 
 	ticker := time.NewTicker(time.Duration(pollingInterval) * time.Millisecond)
 	defer ticker.Stop()
+
 	// Start polling
 	for k := range readers {
 		go readers[k].Poll(events, ticker)
