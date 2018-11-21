@@ -37,13 +37,6 @@ type DigitalInputReader struct {
 	f     *os.File
 }
 
-// NewDigitalInputReader creates a new DigitalInput and opens the file handle
-func NewDigitalInputReader(folder string, topic string) (d *DigitalInputReader, err error) {
-	f, err := os.Open(path.Join(folder, Filename))
-	d = &DigitalInputReader{Topic: topic, Path: folder, f: f}
-	return
-}
-
 // Update reads the value and sets the new value
 func (d *DigitalInputReader) Update(events chan *DigitalInputReader) (err error) {
 	// Read the first byte
@@ -82,6 +75,13 @@ func (d *DigitalInputReader) Close() error {
 	return d.f.Close()
 }
 
+// NewDigitalInputReader creates a new DigitalInput and opens the file handle
+func NewDigitalInputReader(folder string, topic string) (d *DigitalInputReader, err error) {
+	f, err := os.Open(path.Join(folder, Filename))
+	d = &DigitalInputReader{Topic: topic, Path: folder, f: f}
+	return
+}
+
 // findDigitalInputPaths finds all digital inputs in a given root folder
 func findDigitalInputPaths(root string) (paths []string, err error) {
 	// Compile regex first
@@ -97,5 +97,26 @@ func findDigitalInputPaths(root string) (paths []string, err error) {
 			}
 			return err
 		})
+	return
+}
+
+// FindDigitalInputReaders crawls the root (sys) folder to find any matching digial inputs and creates corresponding DigitalInputReader instances from these.
+func FindDigitalInputReaders(root string) (readers []DigitalInputReader, err error) {
+	// Find the paths first
+	paths, err := findDigitalInputPaths(root)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	readers = make([]DigitalInputReader, len(paths))
+	for k, folder := range paths {
+		// Read topic as the trailing folder path
+		_, topic := path.Split(folder)
+		digitalInputReader, err := NewDigitalInputReader(folder, topic)
+		if err != nil {
+			log.Print(err)
+		}
+		readers[k] = *digitalInputReader
+	}
 	return
 }
