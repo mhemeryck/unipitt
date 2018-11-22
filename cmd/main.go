@@ -13,8 +13,6 @@ import (
 var version, commit, date string
 
 const (
-	// SysFsRoot default root folder to search for digital inputs
-	SysFsRoot = "/sys/devices/platform/unipi_plc"
 	// Payload default MQTT payload
 	Payload = "trigger"
 )
@@ -45,7 +43,7 @@ func main() {
 	var clientID string
 	flag.StringVar(&clientID, "client_id", "unipitt", "MQTT host client ID")
 	var sysfsRoot string
-	flag.StringVar(&sysfsRoot, "sysfs_root", SysFsRoot, "Root folder to search for digital inputs")
+	flag.StringVar(&sysfsRoot, "sysfs_root", unipitt.SysFsRoot, "Root folder to search for digital inputs")
 	var payload string
 	flag.StringVar(&payload, "payload", Payload, "Default MQTT message payload")
 	flag.Parse()
