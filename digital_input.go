@@ -53,7 +53,10 @@ func (d *DigitalInputReader) Update(events chan *DigitalInputReader) (err error)
 }
 
 // Poll continuously updates the instance
-func (d *DigitalInputReader) Poll(events chan *DigitalInputReader, ticker *time.Ticker) {
+func (d *DigitalInputReader) Poll(events chan *DigitalInputReader, interval int) {
+	ticker := time.NewTicker(time.Duration(interval) * time.Millisecond)
+	defer ticker.Stop()
+
 	count := 0
 	for {
 		select {

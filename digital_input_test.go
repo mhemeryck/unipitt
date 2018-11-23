@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-	"time"
 )
 
 // setup for creating a temporary digital input
@@ -158,11 +157,6 @@ func TestPoll(t *testing.T) {
 	events := make(chan *DigitalInputReader)
 	defer close(events)
 
-	// Ticker
-	pollingInterval := 500 * time.Millisecond
-	ticker := time.NewTicker(pollingInterval)
-	defer ticker.Stop()
-
 	// Setup for triggering an event
 	digitalInput.Value = false
 	f.Seek(0, 0)
@@ -172,7 +166,7 @@ func TestPoll(t *testing.T) {
 	}
 
 	// Poll
-	go digitalInput.Poll(events, ticker)
+	go digitalInput.Poll(events, 500)
 
 	// Block on events
 	d := <-events
@@ -202,14 +196,9 @@ func TestPollError(t *testing.T) {
 	events := make(chan *DigitalInputReader)
 	defer close(events)
 
-	// Ticker
-	pollingInterval := 500 * time.Millisecond
-	ticker := time.NewTicker(pollingInterval)
-	defer ticker.Stop()
-
 	f.Close()
 	// Poll
-	go digitalInput.Poll(events, ticker)
+	go digitalInput.Poll(events, 500)
 
 	d := <-events
 
