@@ -2,7 +2,6 @@ package unipitt
 
 import (
 	"log"
-	"time"
 
 	"github.com/cenkalti/backoff"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -60,12 +59,10 @@ func (h *Handler) Poll(done chan bool, interval int, payload string) (err error)
 	events := make(chan *DigitalInputReader)
 	defer close(events)
 
-	ticker := time.NewTicker(time.Duration(interval) * time.Millisecond)
-
 	// Start polling
 	log.Printf("Initiate polling for %d readers\n", len(h.readers))
 	for k := range h.readers {
-		go h.readers[k].Poll(events, ticker)
+		go h.readers[k].Poll(events, interval)
 	}
 
 	// Publish on a trigger
@@ -82,7 +79,6 @@ func (h *Handler) Poll(done chan bool, interval int, payload string) (err error)
 			}
 		case <-done:
 			log.Println("Handler done polling, coming back ...")
-			ticker.Stop()
 			return
 		}
 	}
