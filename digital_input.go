@@ -17,8 +17,6 @@ const (
 	TrueValue = "1"
 	// FolderRegex represents to regular expression used for finding the required file to read from
 	FolderRegex = "di_[0-9]_[0-9]{2}"
-	// SysFsRoot default root folder to search for digital inputs
-	SysFsRoot = "/sys/devices/platform/unipi_plc"
 )
 
 // DigitalInput interface for doing the polling
