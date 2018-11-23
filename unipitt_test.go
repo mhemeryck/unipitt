@@ -81,4 +81,7 @@ func TestHandler(t *testing.T) {
 	if !bytes.Contains(buf.Bytes(), []byte("Trigger for topic di_1_01")) {
 		t.Fatal("Expected a trigger to be captured in the log, found none")
 	}
+	if !bytes.Contains(buf.Bytes(), []byte("Error connecting to MQTT broker ...")) {
+		t.Fatal("Expected a reconnect for MQTT broker, did not find one")
+	}
 }

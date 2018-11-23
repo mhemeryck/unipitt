@@ -4,6 +4,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/cenkalti/backoff"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
@@ -40,6 +41,10 @@ func NewHandler(broker string, clientID string, caFile string, sysFsRoot string)
 		}
 	}
 	h.client = mqtt.NewClient(opts)
+	err = h.connect()
+	if err != nil {
+		log.Println("Error connecting to MQTT broker ...")
+	}
 
 	// Digital Input reader setup
 	h.readers, err = FindDigitalInputReaders(sysFsRoot)
@@ -56,7 +61,6 @@ func (h *Handler) Poll(done chan bool, interval int, payload string) (err error)
 	defer close(events)
 
 	ticker := time.NewTicker(time.Duration(interval) * time.Millisecond)
-	defer ticker.Stop()
 
 	// Start polling
 	log.Printf("Initiate polling for %d readers\n", len(h.readers))
@@ -72,13 +76,24 @@ func (h *Handler) Poll(done chan bool, interval int, payload string) (err error)
 				log.Printf("Found error %s for topic %s\n", d.Err, d.Topic)
 			} else {
 				log.Printf("Trigger for topic %s\n", d.Topic)
-				h.client.Publish(d.Topic, 0, false, payload)
+				if token := h.client.Publish(d.Topic, 0, false, payload); token.Wait() && token.Error() != nil {
+					go backoff.Retry(h.connect, backoff.NewExponentialBackOff())
+				}
 			}
 		case <-done:
 			log.Println("Handler done polling, coming back ...")
+			ticker.Stop()
 			return
 		}
 	}
+}
+
+// reconnect tries to reconnect the MQTT client to the broker
+func (h *Handler) connect() error {
+	log.Println("Error connecting to MQTT broker ...")
+	token := h.client.Connect()
+	token.Wait()
+	return token.Error()
 }
 
 // Close loose ends
