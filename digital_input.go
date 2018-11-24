@@ -5,18 +5,16 @@ import (
 	"log"
 	"os"
 	"path"
-	"path/filepath"
-	"regexp"
 	"time"
 )
 
 const (
-	// Filename to check for
-	Filename = "di_value"
-	// TrueValue is the value considered to be true
-	TrueValue = "1"
-	// FolderRegex represents to regular expression used for finding the required file to read from
-	FolderRegex = "di_[0-9]_[0-9]{2}"
+	// DiFilename to check for
+	DiFilename = "di_value"
+	// DiTrueValue is the value considered to be true
+	DiTrueValue = "1"
+	// DiFolderRegex represents to regular expression used for finding the required file to read from
+	DiFolderRegex = "di_[0-9]_[0-9]{2}"
 )
 
 // DigitalInput interface for doing the polling
@@ -42,7 +40,7 @@ func (d *DigitalInputReader) Update(events chan *DigitalInputReader) (err error)
 	b := make([]byte, 1)
 	_, err = d.f.Read(b)
 	// Check it's true
-	value := bytes.Equal(b, []byte(TrueValue))
+	value := bytes.Equal(b, []byte(DiTrueValue))
 	// Push out an event in case of a leading edge
 	if !d.Value && value {
 		events <- d
@@ -84,33 +82,15 @@ func (d *DigitalInputReader) Close() error {
 
 // NewDigitalInputReader creates a new DigitalInput and opens the file handle
 func NewDigitalInputReader(folder string, topic string) (d *DigitalInputReader, err error) {
-	f, err := os.Open(path.Join(folder, Filename))
+	f, err := os.Open(path.Join(folder, DiFilename))
 	d = &DigitalInputReader{Topic: topic, Path: folder, f: f}
-	return
-}
-
-// findDigitalInputPaths finds all digital inputs in a given root folder
-func findDigitalInputPaths(root string) (paths []string, err error) {
-	// Compile regex first
-	regex, err := regexp.Compile(FolderRegex)
-	// Walk the folder structure
-	err = filepath.Walk(root,
-		func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-			if regex.MatchString(info.Name()) {
-				paths = append(paths, path)
-			}
-			return err
-		})
 	return
 }
 
 // FindDigitalInputReaders crawls the root (sys) folder to find any matching digial inputs and creates corresponding DigitalInputReader instances from these.
 func FindDigitalInputReaders(root string) (readers []DigitalInputReader, err error) {
 	// Find the paths first
-	paths, err := findDigitalInputPaths(root)
+	paths, err := findPathsByRegex(root, DiFolderRegex)
 	if err != nil {
 		log.Println(err)
 		return

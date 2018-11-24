@@ -10,6 +10,8 @@ import (
 const (
 	// SysFsRoot default root folder to search for digital inputs
 	SysFsRoot = "/sys/devices/platform/unipi_plc"
+	// MsgTrueValue is the MQTT true value to check for
+	MsgTrueValue = "ON"
 )
 
 // Unipitt defines the interface with unipi board
@@ -20,13 +22,21 @@ type Unipitt interface {
 
 // Handler implements handles all unipi to MQTT interactions
 type Handler struct {
-	readers []DigitalInputReader
-	client  mqtt.Client
+	readers   []DigitalInputReader
+	writerMap map[string]DigitalOutputWriter
+	client    mqtt.Client
 }
 
 // NewHandler prepares and sets up an entire unipitt handler
 func NewHandler(broker string, clientID string, caFile string, sysFsRoot string) (h *Handler, err error) {
 	h = &Handler{}
+	// Digital writer setup
+	// Set message handler as callback
+	h.writerMap, err = FindDigitalOutputWriters(sysFsRoot)
+	if err != nil {
+		log.Printf("Error creating a map of digital output writers: %s\n", err)
+	}
+
 	// MQTT setup
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(broker)
@@ -39,10 +49,30 @@ func NewHandler(broker string, clientID string, caFile string, sysFsRoot string)
 			opts.SetTLSConfig(tlsConfig)
 		}
 	}
+
+	// Callbacks for subscribe
+	var cb mqtt.MessageHandler = func(c mqtt.Client, msg mqtt.Message) {
+		if writer, ok := h.writerMap[msg.Topic()]; ok {
+			err := writer.Update(string(msg.Payload()) == MsgTrueValue)
+			if err != nil {
+				log.Printf("Error updating digital output with topic %s: %s\n", writer.Topic, err)
+			}
+		} else {
+			log.Printf("Error matching a writer for given topic %s\n", msg.Topic())
+		}
+	}
+	opts.OnConnect = func(c mqtt.Client) {
+		for topic := range h.writerMap {
+			if token := c.Subscribe(topic, 0, cb); token.Wait() && token.Error() != nil {
+				log.Print(err)
+			}
+		}
+	}
+
 	h.client = mqtt.NewClient(opts)
 	err = h.connect()
 	if err != nil {
-		log.Println("Error connecting to MQTT broker ...")
+		log.Printf("Error connecting to MQTT broker: %s\n ...", err)
 	}
 
 	// Digital Input reader setup
@@ -57,7 +87,6 @@ func NewHandler(broker string, clientID string, caFile string, sysFsRoot string)
 // Poll starts the actual polling and pushing to MQTT
 func (h *Handler) Poll(done chan bool, interval int, payload string) (err error) {
 	events := make(chan *DigitalInputReader)
-	defer close(events)
 
 	// Start polling
 	log.Printf("Initiate polling for %d readers\n", len(h.readers))
