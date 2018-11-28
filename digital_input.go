@@ -26,7 +26,7 @@ type DigitalInput interface {
 
 // DigitalInputReader implements the digital input interface
 type DigitalInputReader struct {
-	Topic string
+	Name  string
 	Value bool
 	Path  string
 	Err   error
@@ -63,12 +63,12 @@ func (d *DigitalInputReader) Poll(events chan *DigitalInputReader, interval int)
 			if err != nil {
 				d.Err = err
 				events <- d
-				log.Printf("Error polling digital input with topic %s\n", d.Topic)
+				log.Printf("Error polling digital input with name %s\n", d.Name)
 				return
 			}
 			if count%100 == 0 {
 				count = 0
-				log.Printf("Polling digital input %s ...\n", d.Topic)
+				log.Printf("Polling digital input %s ...\n", d.Name)
 			}
 			count++
 		}
@@ -81,9 +81,9 @@ func (d *DigitalInputReader) Close() error {
 }
 
 // NewDigitalInputReader creates a new DigitalInput and opens the file handle
-func NewDigitalInputReader(folder string, topic string) (d *DigitalInputReader, err error) {
+func NewDigitalInputReader(folder string, name string) (d *DigitalInputReader, err error) {
 	f, err := os.Open(path.Join(folder, DiFilename))
-	d = &DigitalInputReader{Topic: topic, Path: folder, f: f}
+	d = &DigitalInputReader{Name: name, Path: folder, f: f}
 	return
 }
 
@@ -98,9 +98,9 @@ func FindDigitalInputReaders(root string) (readers []DigitalInputReader, err err
 	log.Printf("Found %d matching digital input paths\n", len(paths))
 	readers = make([]DigitalInputReader, len(paths))
 	for k, folder := range paths {
-		// Read topic as the trailing folder path
-		_, topic := path.Split(folder)
-		digitalInputReader, err := NewDigitalInputReader(folder, topic)
+		// Read name as the trailing folder path
+		_, name := path.Split(folder)
+		digitalInputReader, err := NewDigitalInputReader(folder, name)
 		if err != nil {
 			log.Print(err)
 		}

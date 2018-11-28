@@ -55,15 +55,15 @@ func NewHandler(broker string, clientID string, caFile string, sysFsRoot string)
 		if writer, ok := h.writerMap[msg.Topic()]; ok {
 			err := writer.Update(string(msg.Payload()) == MsgTrueValue)
 			if err != nil {
-				log.Printf("Error updating digital output with topic %s: %s\n", writer.Topic, err)
+				log.Printf("Error updating digital output with name %s: %s\n", writer.Name, err)
 			}
 		} else {
-			log.Printf("Error matching a writer for given topic %s\n", msg.Topic())
+			log.Printf("Error matching a writer for given name %s\n", msg.Topic())
 		}
 	}
 	opts.OnConnect = func(c mqtt.Client) {
-		for topic := range h.writerMap {
-			if token := c.Subscribe(topic, 0, cb); token.Wait() && token.Error() != nil {
+		for name := range h.writerMap {
+			if token := c.Subscribe(name, 0, cb); token.Wait() && token.Error() != nil {
 				log.Print(err)
 			}
 		}
@@ -99,10 +99,10 @@ func (h *Handler) Poll(done chan bool, interval int, payload string) (err error)
 		select {
 		case d := <-events:
 			if d.Err != nil {
-				log.Printf("Found error %s for topic %s\n", d.Err, d.Topic)
+				log.Printf("Found error %s for name %s\n", d.Err, d.Name)
 			} else {
-				log.Printf("Trigger for topic %s\n", d.Topic)
-				if token := h.client.Publish(d.Topic, 0, false, payload); token.Wait() && token.Error() != nil {
+				log.Printf("Trigger for name %s\n", d.Name)
+				if token := h.client.Publish(d.Name, 0, false, payload); token.Wait() && token.Error() != nil {
 					go backoff.Retry(h.connect, backoff.NewExponentialBackOff())
 				}
 			}

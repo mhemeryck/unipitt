@@ -30,7 +30,7 @@ func setup(folder string) (dir string, filename string, f *os.File, err error) {
 func TestNewDigitalInput(t *testing.T) {
 	// Setup
 	folder := "di_1_01"
-	topic := "di_1_01"
+	name := "di_1_01"
 	dir, filename, f, err := setup(folder)
 	defer os.RemoveAll(dir)   // clean up
 	defer os.Remove(filename) // clean up
@@ -40,11 +40,11 @@ func TestNewDigitalInput(t *testing.T) {
 	}
 
 	// Create a new DigitalInputReader
-	digitalInput, err := NewDigitalInputReader(dir, topic)
+	digitalInput, err := NewDigitalInputReader(dir, name)
 
 	// Test
-	if digitalInput.Topic != topic {
-		t.Fatalf("Expected digital input topic to be %s, got %s\n", topic, digitalInput.Topic)
+	if digitalInput.Name != name {
+		t.Fatalf("Expected digital input name to be %s, got %s\n", name, digitalInput.Name)
 	}
 	if digitalInput.Path != dir {
 		t.Fatalf("Expected digital input path to be %s, got %s\n", folder, digitalInput.Path)
@@ -57,7 +57,7 @@ func TestNewDigitalInput(t *testing.T) {
 func TestClose(t *testing.T) {
 	// Setup
 	folder := "di_1_01"
-	topic := "di_1_01"
+	name := "di_1_01"
 	dir, filename, f, err := setup(folder)
 	defer os.RemoveAll(dir)   // clean up
 	defer os.Remove(filename) // clean up
@@ -65,7 +65,7 @@ func TestClose(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Got error creating temporary file system setup: %s\n", err)
 	}
-	digitalInput, err := NewDigitalInputReader(dir, topic)
+	digitalInput, err := NewDigitalInputReader(dir, name)
 	if err != nil {
 		t.Fail()
 	}
@@ -80,7 +80,7 @@ func TestClose(t *testing.T) {
 func TestUpdate(t *testing.T) {
 	// Setup
 	folder := "di_1_01"
-	topic := "di_1_01"
+	name := "di_1_01"
 	dir, filename, f, err := setup(folder)
 	defer os.RemoveAll(dir)   // clean up
 	defer os.Remove(filename) // clean up
@@ -88,7 +88,7 @@ func TestUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Got error creating temporary file system setup: %s\n", err)
 	}
-	digitalInput, err := NewDigitalInputReader(dir, topic)
+	digitalInput, err := NewDigitalInputReader(dir, name)
 	if err != nil {
 		t.Fail()
 	}
@@ -140,7 +140,7 @@ func TestUpdate(t *testing.T) {
 func TestPoll(t *testing.T) {
 	// File / folder setup
 	folder := "di_1_01"
-	topic := "di_1_01"
+	name := "di_1_01"
 	dir, filename, f, err := setup(folder)
 	defer os.RemoveAll(dir)   // clean up
 	defer os.Remove(filename) // clean up
@@ -148,7 +148,7 @@ func TestPoll(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Got error creating temporary file system setup: %s\n", err)
 	}
-	digitalInput, err := NewDigitalInputReader(dir, topic)
+	digitalInput, err := NewDigitalInputReader(dir, name)
 	if err != nil {
 		t.Fail()
 	}
@@ -179,7 +179,7 @@ func TestPoll(t *testing.T) {
 
 func TestPollError(t *testing.T) {
 	folder := "di_1_01"
-	topic := "di_1_01"
+	name := "di_1_01"
 	dir, filename, f, err := setup(folder)
 	defer os.RemoveAll(dir)   // clean up
 	defer os.Remove(filename) // clean up
@@ -187,7 +187,7 @@ func TestPollError(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Got error creating temporary file system setup: %s\n", err)
 	}
-	digitalInput, err := NewDigitalInputReader(dir, topic)
+	digitalInput, err := NewDigitalInputReader(dir, name)
 	if err != nil {
 		t.Fail()
 	}
@@ -231,8 +231,8 @@ func TestFindDigitalInputReaders(t *testing.T) {
 	if len(readers) != 1 {
 		t.Fatalf("Expected 1 reader to be found, found %d\n", len(readers))
 	}
-	if readers[0].Topic != folder {
-		t.Fatalf("Expected topic to be %s, found %s\n", folder, readers[0].Topic)
+	if readers[0].Name != folder {
+		t.Fatalf("Expected name to be %s, found %s\n", folder, readers[0].Name)
 	}
 }
 

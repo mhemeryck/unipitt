@@ -24,8 +24,8 @@ type DigitalOutput interface {
 
 // DigitalOutputWriter implements the digital output specifically for writing outputs to files
 type DigitalOutputWriter struct {
-	Topic string
-	Path  string
+	Name string
+	Path string
 }
 
 // Update writes the updated value to the digital output
@@ -42,16 +42,16 @@ func (d *DigitalOutputWriter) Update(value bool) (err error) {
 		_, err = f.WriteString(DoFalseValue)
 	}
 	if err == nil {
-		log.Printf("Update value of digital output %s to %t\n", d.Topic, value)
+		log.Printf("Update value of digital output %s to %t\n", d.Name, value)
 	}
 	return err
 }
 
 // NewDigitalOutputWriter creates a new digital output writer instance from a a given matching folder
 func NewDigitalOutputWriter(folder string) (d *DigitalOutputWriter) {
-	// Read topic as the trailing folder path
-	_, topic := path.Split(folder)
-	return &DigitalOutputWriter{Topic: topic, Path: folder}
+	// Read name as the trailing folder path
+	_, name := path.Split(folder)
+	return &DigitalOutputWriter{Name: name, Path: folder}
 }
 
 // FindDigitalOutputWriters generates the output writes from a given path
@@ -66,7 +66,7 @@ func FindDigitalOutputWriters(root string) (writerMap map[string]DigitalOutputWr
 	var d *DigitalOutputWriter
 	for _, path := range paths {
 		d = NewDigitalOutputWriter(path)
-		writerMap[d.Topic] = *d
+		writerMap[d.Name] = *d
 	}
 	return
 }
