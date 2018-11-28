@@ -11,8 +11,8 @@ import (
 func TestNewDigitalOutputWriter(t *testing.T) {
 	folder := "foo/bar"
 	d := NewDigitalOutputWriter(folder)
-	if d.Topic != "bar" {
-		t.Fatalf("Expected topic %s, got %s\n", "bar", d.Topic)
+	if d.Name != "bar" {
+		t.Fatalf("Expected name %s, got %s\n", "bar", d.Name)
 	}
 	if d.Path != folder {
 		t.Fatalf("Expected path %s, got %s\n", folder, d.Path)
@@ -93,7 +93,7 @@ func TestFindDigitalOutputWriters(t *testing.T) {
 		t.Fatal(err)
 	}
 	if writer, ok := writerMap[folder]; !ok {
-		t.Fatalf("Expected to find writer with topic %s in map for name %s\n", writer.Topic, folder)
+		t.Fatalf("Expected to find writer with name %s in map for name %s\n", writer.Name, folder)
 	}
 
 }

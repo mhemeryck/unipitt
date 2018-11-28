@@ -78,7 +78,7 @@ func TestHandler(t *testing.T) {
 		done <- true
 	}()
 	handler.Poll(done, pollingInterval, payload)
-	if !bytes.Contains(buf.Bytes(), []byte("Trigger for topic di_1_01")) {
+	if !bytes.Contains(buf.Bytes(), []byte("Trigger for name di_1_01")) {
 		t.Fatal("Expected a trigger to be captured in the log, found none")
 	}
 	if !bytes.Contains(buf.Bytes(), []byte("Error connecting to MQTT broker ...")) {
