@@ -33,7 +33,7 @@ func main() {
 	var showVersion bool
 	flag.BoolVar(&showVersion, "version", false, "Print version info and exit")
 	var pollingInterval int
-	flag.IntVar(&pollingInterval, "polling_interval", 50, "Polling interval for one coil group in millis")
+	flag.IntVar(&pollingInterval, "polling_interval", 50, "Polling interval per digital input in millis")
 	var caFile string
 	flag.StringVar(&caFile, "cafile", "", "CA certificate used for MQTT TLS setup")
 	var broker string
