@@ -44,6 +44,8 @@ func main() {
 	flag.StringVar(&sysFsRoot, "sysfs_root", unipitt.SysFsRoot, "Root folder to search for digital inputs")
 	var payload string
 	flag.StringVar(&payload, "payload", Payload, "Default MQTT message payload")
+	var configFile string
+	flag.StringVar(&configFile, "config", "", "Config file name")
 	flag.Parse()
 
 	// Show version and exit
@@ -53,7 +55,7 @@ func main() {
 	}
 
 	// Setup handler
-	handler, err := unipitt.NewHandler(broker, clientID, caFile, sysFsRoot)
+	handler, err := unipitt.NewHandler(broker, clientID, caFile, sysFsRoot, configFile)
 	if err != nil {
 		log.Fatal(err)
 	}
