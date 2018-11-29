@@ -1,7 +1,6 @@
 package unipitt
 
 import (
-	"bytes"
 	"log"
 	"os"
 	"path"
@@ -40,7 +39,7 @@ func (d *DigitalInputReader) Update(events chan *DigitalInputReader) (err error)
 	b := make([]byte, 1)
 	_, err = d.f.Read(b)
 	// Check it's true
-	value := bytes.Equal(b, []byte(DiTrueValue))
+	value := string(b) == DiTrueValue
 	// Push out an event in case of a leading edge
 	if !d.Value && value {
 		events <- d
