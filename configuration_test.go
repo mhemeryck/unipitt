@@ -81,7 +81,7 @@ func TestConfigurationName(t *testing.T) {
 func TestConfigFromFileNonExistant(t *testing.T) {
 	_, err := configFromFile("foo")
 	if err == nil {
-		t.Fatalf("Expected an error to occur reading non-existant file, got not none")
+		t.Fatalf("Expected an error to occur reading non-existent file, got not none")
 	}
 }
 
