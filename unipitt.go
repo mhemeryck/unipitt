@@ -107,7 +107,7 @@ func NewHandler(broker string, clientID string, caFile string, sysFsRoot string,
 }
 
 // Poll starts the actual polling and pushing to MQTT
-func (h *Handler) Poll(done chan bool, interval int, payload string) (err error) {
+func (h *Handler) Poll(done chan bool, interval int) (err error) {
 	events := make(chan *DigitalInputReader)
 
 	// Start polling
@@ -123,8 +123,17 @@ func (h *Handler) Poll(done chan bool, interval int, payload string) (err error)
 			if d.Err != nil {
 				log.Printf("Found error %s for name %s\n", d.Err, d.Name)
 			} else {
+			        var payload string
 				// Determine topic from config
 				log.Printf("Trigger for name %s, using topic %s\n", d.Name, h.config.Topic(d.Name))
+				switch (d.Value) {
+					case true: {
+						payload = "ON"
+					}
+					case false: {
+						payload = "OFF"
+					}
+				}
 				if token := h.client.Publish(h.config.Topic(d.Name), 0, false, payload); token.Wait() && token.Error() != nil {
 					go backoff.Retry(h.connect, backoff.NewExponentialBackOff())
 				}

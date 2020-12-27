@@ -42,8 +42,6 @@ func main() {
 	flag.StringVar(&clientID, "client_id", "unipitt", "MQTT host client ID")
 	var sysFsRoot string
 	flag.StringVar(&sysFsRoot, "sysfs_root", unipitt.SysFsRoot, "Root folder to search for digital inputs")
-	var payload string
-	flag.StringVar(&payload, "payload", Payload, "Default MQTT message payload")
 	var configFile string
 	flag.StringVar(&configFile, "config", "", "Config file name")
 	flag.Parse()
@@ -64,5 +62,5 @@ func main() {
 	// Start polling (blocking)
 	done := make(chan bool)
 	defer close(done)
-	handler.Poll(done, pollingInterval, payload)
+	handler.Poll(done, pollingInterval)
 }
