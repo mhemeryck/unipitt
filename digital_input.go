@@ -41,7 +41,7 @@ func (d *DigitalInputReader) Update(events chan *DigitalInputReader) (err error)
 	// Check it's true
 	value := string(b) == DiTrueValue
 	// Push out an event in case of a leading edge
-	if !d.Value && value {
+	if d.Value != value {
 		events <- d
 	}
 	// Update value
