@@ -77,15 +77,10 @@ func NewHandler(broker string, clientID string, caFile string, sysFsRoot string,
 	}
 	opts.OnConnect = func(c mqtt.Client) {
 		for name := range h.writerMap {
-			if token := c.Subscribe(name, 0, cb); token.Wait() && token.Error() != nil {
-				log.Print(err)
-			}
 			// Also subscribe any given mapped topic for the names
 			topic := h.config.Topic(name)
-			if topic != name {
-				if token := c.Subscribe(topic, 0, cb); token.Wait() && token.Error() != nil {
-					log.Print(err)
-				}
+			if token := c.Subscribe(topic, 0, cb); token.Wait() && token.Error() != nil {
+				log.Print(err)
 			}
 		}
 	}
