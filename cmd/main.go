@@ -40,6 +40,10 @@ func main() {
 	flag.StringVar(&broker, "broker", "ssl://raspberrypi.lan:8883", "MQTT broker URI")
 	var clientID string
 	flag.StringVar(&clientID, "client_id", "unipitt", "MQTT host client ID")
+	var username string
+	flag.StringVar(&username, "username", "", "MQTT username")
+	var password string
+	flag.StringVar(&password, "password", "", "MQTT password")	
 	var sysFsRoot string
 	flag.StringVar(&sysFsRoot, "sysfs_root", unipitt.SysFsRoot, "Root folder to search for digital inputs")
 	var configFile string
@@ -53,7 +57,7 @@ func main() {
 	}
 
 	// Setup handler
-	handler, err := unipitt.NewHandler(broker, clientID, caFile, sysFsRoot, configFile)
+	handler, err := unipitt.NewHandler(broker, clientID, caFile, sysFsRoot, username, password, configFile)
 	if err != nil {
 		log.Fatal(err)
 	}

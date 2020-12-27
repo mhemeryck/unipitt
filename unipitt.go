@@ -29,7 +29,7 @@ type Handler struct {
 }
 
 // NewHandler prepares and sets up an entire unipitt handler
-func NewHandler(broker string, clientID string, caFile string, sysFsRoot string, configFile string) (h *Handler, err error) {
+func NewHandler(broker string, clientID string, caFile string, sysFsRoot string, username string, password string, configFile string) (h *Handler, err error) {
 	h = &Handler{}
 
 	// Check if there's a mapping to be read
@@ -53,6 +53,8 @@ func NewHandler(broker string, clientID string, caFile string, sysFsRoot string,
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(broker)
 	opts.SetClientID(clientID)
+	opts.SetUsername(username)
+	opts.SetPassword(password)
 	if caFile != "" {
 		tlsConfig, err := NewTLSConfig(caFile)
 		if err != nil {
