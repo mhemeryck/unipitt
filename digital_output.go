@@ -14,7 +14,7 @@ const (
 	// DoFalseValue digital output false value to write
 	DoFalseValue = "0\n"
 	// DoFolderRegex regular expression used for finding folders which contain digital output
-	DoFolderRegex = "do_[0-9]_[0-9]{2}"
+	DoFolderRegex = "[dr]o_[0-9]_[0-9]{2}"
 )
 
 // DigitalOutput represents the digital outputs of the unipi board
@@ -30,7 +30,12 @@ type DigitalOutputWriter struct {
 
 // Update writes the updated value to the digital output
 func (d *DigitalOutputWriter) Update(value bool) (err error) {
-	f, err := os.Create(path.Join(d.Path, DoFilename))
+	var value_filename string;
+
+	value_filename = DoFilename;
+	value_filename = d.Name[0:1] + DoFilename[1:]
+	
+	f, err := os.Create(path.Join(d.Path, value_filename))
 	defer f.Close()
 	if err != nil {
 		return err
@@ -42,7 +47,7 @@ func (d *DigitalOutputWriter) Update(value bool) (err error) {
 		_, err = f.WriteString(DoFalseValue)
 	}
 	if err == nil {
-		log.Printf("Update value of digital output %s to %t\n", d.Name, value)
+		log.Printf("Update value of digital output %s to %t in file %s\n", d.Name, value, value_filename)
 	}
 	return err
 }
