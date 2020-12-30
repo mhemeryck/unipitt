@@ -17,7 +17,6 @@ func TestHandler(t *testing.T) {
 	broker := "mqtts://foo"
 	clientID := "unipitt"
 	caFile := ""
-	payload := "bar"
 	configFile := ""
 	pollingInterval := 50
 
@@ -50,7 +49,7 @@ func TestHandler(t *testing.T) {
 	defer f.Close()
 	defer os.RemoveAll(root) // clean up
 
-	handler, err := NewHandler(broker, clientID, caFile, sysFsRoot, configFile)
+	handler, err := NewHandler(broker, clientID, caFile, sysFsRoot, "", "", configFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -77,7 +76,7 @@ func TestHandler(t *testing.T) {
 		time.Sleep(1 * time.Second)
 		done <- true
 	}()
-	handler.Poll(done, pollingInterval, payload)
+	handler.Poll(done, pollingInterval)
 	if !bytes.Contains(buf.Bytes(), []byte("Trigger for name di_1_01")) {
 		t.Fatal("Expected a trigger to be captured in the log, found none")
 	}
@@ -147,7 +146,7 @@ topics:
 	defer f.Close()
 	defer os.RemoveAll(root) // clean up
 
-	handler, err := NewHandler(broker, clientID, caFile, sysFsRoot, configFile.Name())
+	handler, err := NewHandler(broker, clientID, caFile, sysFsRoot, "", "", configFile.Name())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -220,7 +219,7 @@ func TestHandlerConfigUnmarshalIssue(t *testing.T) {
 		log.SetOutput(os.Stderr)
 	}()
 
-	handler, err := NewHandler(broker, clientID, caFile, sysFsRoot, configFile.Name())
+	handler, err := NewHandler(broker, clientID, caFile, sysFsRoot, "", "", configFile.Name())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -239,7 +238,7 @@ func TestHandlerNoSysFsRoot(t *testing.T) {
 
 	sysFsRoot := "foo"
 
-	handler, err := NewHandler(broker, clientID, caFile, sysFsRoot, configFile)
+	handler, err := NewHandler(broker, clientID, caFile, sysFsRoot, "", "", configFile)
 	if err == nil {
 		t.Fatalf("Expected an error without a valid sys fs folder, got none")
 	}
@@ -267,7 +266,7 @@ func TestHandlerCaFileIssue(t *testing.T) {
 		}
 	}
 
-	handler, err := NewHandler(broker, clientID, caFile, sysFsRoot, configFile)
+	handler, err := NewHandler(broker, clientID, caFile, sysFsRoot, "", "", configFile)
 	if err == nil {
 		t.Fatal("Expected an error with invalid caFile, got none")
 	}
@@ -301,7 +300,7 @@ func TestHandlerCaFile(t *testing.T) {
 		}
 	}
 
-	handler, err := NewHandler(broker, clientID, caFile, sysFsRoot, configFile)
+	handler, err := NewHandler(broker, clientID, caFile, sysFsRoot, "", "", configFile)
 	if err != nil {
 		t.Fatal(err)
 	}
