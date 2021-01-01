@@ -56,8 +56,29 @@ func main() {
 		return
 	}
 
+	// Initialize config from command line
+	config := unipitt.Configuration{
+		SysFsRoot: sysFsRoot,
+		Mqtt: unipitt.MqttConfig{
+			Broker: broker,
+			ClientID: clientID,
+			CAFile: caFile,
+			Username: username,
+			Password: password,
+		},
+	}
+
+	// Check if there's a config to be read
+	if configFile != "" {
+		log.Printf("Reading configuration file %s\n", configFile)
+		err := unipitt.UpdateConfigFromFile(configFile, &config)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	// Setup handler
-	handler, err := unipitt.NewHandler(broker, clientID, caFile, sysFsRoot, username, password, configFile)
+	handler, err := unipitt.NewHandler(config)
 	if err != nil {
 		log.Fatal(err)
 	}

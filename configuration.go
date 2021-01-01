@@ -8,8 +8,20 @@ import (
 )
 
 // Configuration represents the topic name for the MQTT message for a given instance name
+
+type MqttConfig struct {
+	Broker string
+	CAFile string
+	ClientID string
+	Username string
+	Password string
+	TopicPrefix string
+}
+
 type Configuration struct {
 	Topics map[string]string
+	Mqtt MqttConfig
+	SysFsRoot string
 }
 
 // Topic gets a topic (value) for a given name (key). Return the name itself as fallback
@@ -37,8 +49,8 @@ func (c *Configuration) Name(topic string) string {
 	return topic
 }
 
-// configFromFile reads a configuration from a yaml file
-func configFromFile(configFile string) (c Configuration, err error) {
+// UpdateConfigFromFile updates the configuration with values from a yaml file
+func UpdateConfigFromFile(configFile string, c *Configuration) (err error) {
 	f, err := ioutil.ReadFile(configFile)
 	if err != nil {
 		log.Printf("Error reading config file: %s\n", err)
@@ -48,6 +60,16 @@ func configFromFile(configFile string) (c Configuration, err error) {
 	err = yaml.Unmarshal(f, &c)
 	if err != nil {
 		log.Printf("Error unmarshalling the config: %s\n", err)
+		return
+	}
+	return
+}
+
+// ReadConfigFromFile reads a configuration from a yaml file
+func ReadConfigFromFile(configFile string) (c Configuration, err error) {
+
+	err = UpdateConfigFromFile(configFile, &c)
+	if err != nil {
 		return
 	}
 	return

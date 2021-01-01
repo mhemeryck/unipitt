@@ -79,7 +79,7 @@ func TestConfigurationName(t *testing.T) {
 }
 
 func TestConfigFromFileNonExistant(t *testing.T) {
-	_, err := configFromFile("foo")
+	_, err := ReadConfigFromFile("foo")
 	if err == nil {
 		t.Fatalf("Expected an error to occur reading non-existent file, got not none")
 	}
@@ -96,6 +96,9 @@ func TestConfigFromFile(t *testing.T) {
 topics:
   di_1_01: kitchen switch
   do_2_02: living light
+mqtt:
+  username: mqttuser
+  password: mqttpass
 `)
 	if _, err := configFile.Write(content); err != nil {
 		t.Fatal(err)
@@ -104,7 +107,7 @@ topics:
 		t.Fatal(err)
 	}
 
-	c, err := configFromFile(configFile.Name())
+	c, err := ReadConfigFromFile(configFile.Name())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -114,6 +117,10 @@ topics:
 			"di_1_01": "kitchen switch",
 			"do_2_02": "living light",
 		},
+		Mqtt: MqttConfig{
+			Username: "mqttuser",
+			Password: "mqttpass",
+		},
 	}
 
 	for k, v := range expected.Topics {
@@ -122,6 +129,9 @@ topics:
 		} else if topic != v {
 			t.Errorf("Expected topic to be %s, but got %s\n", v, topic)
 		}
+	}
+	if c.Mqtt != expected.Mqtt {
+		t.Errorf("Expected Mqtt parameters to be %s but got %s\n", c.Mqtt, expected.Mqtt)
 	}
 
 }
@@ -142,7 +152,7 @@ func TestConfigFromFileUnmarshalIssue(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = configFromFile(configFile.Name())
+	_, err = ReadConfigFromFile(configFile.Name())
 	if err == nil {
 		t.Fatal("Expected an error on unmarshalling, got none")
 	}

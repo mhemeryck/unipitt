@@ -29,36 +29,27 @@ type Handler struct {
 }
 
 // NewHandler prepares and sets up an entire unipitt handler
-func NewHandler(broker string, clientID string, caFile string, sysFsRoot string, username string, password string, configFile string) (h *Handler, err error) {
+func NewHandler(config Configuration) (h *Handler, err error) {
 	h = &Handler{}
 
-	// Check if there's a mapping to be read
-	if configFile != "" {
-		log.Printf("Reading configuration file %s\n", configFile)
-		c, err := configFromFile(configFile)
-		if err != nil {
-			log.Printf("Error reading config file %s: %s\n", configFile, err)
-		} else {
-			h.config = c
-		}
-	}
+        h.config = config
 
 	// Digital writer setup
-	h.writerMap, err = FindDigitalOutputWriters(sysFsRoot)
+	h.writerMap, err = FindDigitalOutputWriters(h.config.SysFsRoot)
 	if err != nil {
 		log.Printf("Error creating a map of digital output writers: %s\n", err)
 	}
 
 	// MQTT setup
 	opts := mqtt.NewClientOptions()
-	opts.AddBroker(broker)
-	opts.SetClientID(clientID)
-	opts.SetUsername(username)
-	opts.SetPassword(password)
-	if caFile != "" {
-		tlsConfig, err := NewTLSConfig(caFile)
+	opts.AddBroker(h.config.Mqtt.Broker)
+	opts.SetClientID(h.config.Mqtt.ClientID)
+	opts.SetUsername(h.config.Mqtt.Username)
+	opts.SetPassword(h.config.Mqtt.Password)
+	if h.config.Mqtt.CAFile != "" {
+		tlsConfig, err := NewTLSConfig(h.config.Mqtt.CAFile)
 		if err != nil {
-			log.Printf("Error reading MQTT CA file %s: %s\n", caFile, err)
+			log.Printf("Error reading MQTT CA file %s: %s\n", h.config.Mqtt.CAFile, err)
 			return h, err
 		}
 		opts.SetTLSConfig(tlsConfig)
@@ -94,11 +85,11 @@ func NewHandler(broker string, clientID string, caFile string, sysFsRoot string,
 	}
 
 	// Digital Input reader setup
-	h.readers, err = FindDigitalInputReaders(sysFsRoot)
+	h.readers, err = FindDigitalInputReaders(h.config.SysFsRoot)
 	if err != nil {
 		return
 	}
-	log.Printf("Created %d digital input reader instances from path %s\n", len(h.readers), sysFsRoot)
+	log.Printf("Created %d digital input reader instances from path %s\n", len(h.readers), h.config.SysFsRoot)
 
 	return
 }
