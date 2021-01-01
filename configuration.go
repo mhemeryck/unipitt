@@ -3,6 +3,7 @@ package unipitt
 import (
 	"io/ioutil"
 	"log"
+	"strings"
 
 	yaml "gopkg.in/yaml.v2"
 )
@@ -27,16 +28,16 @@ type Configuration struct {
 // Topic gets a topic (value) for a given name (key). Return the name itself as fallback
 func (c *Configuration) Topic(name string) string {
 	if value, ok := c.Topics[name]; ok {
-		return value
+		return c.Mqtt.TopicPrefix + value
 	}
-	return name
+	return c.Mqtt.TopicPrefix + name
 }
 
 // reverseTopics construct reverse mapping of topics
 func (c *Configuration) reverseTopics() map[string]string {
 	r := make(map[string]string)
 	for key, value := range c.Topics {
-		r[value] = key
+		r[c.Mqtt.TopicPrefix + value] = key
 	}
 	return r
 }
@@ -45,6 +46,9 @@ func (c *Configuration) reverseTopics() map[string]string {
 func (c *Configuration) Name(topic string) string {
 	if name, ok := c.reverseTopics()[topic]; ok {
 		return name
+	}
+	if strings.HasPrefix(topic, c.Mqtt.TopicPrefix) {
+		return topic[len(c.Mqtt.TopicPrefix):]
 	}
 	return topic
 }

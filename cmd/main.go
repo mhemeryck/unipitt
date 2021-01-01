@@ -44,6 +44,8 @@ func main() {
 	flag.StringVar(&username, "username", "", "MQTT username")
 	var password string
 	flag.StringVar(&password, "password", "", "MQTT password")	
+	var topicPrefix string
+	flag.StringVar(&topicPrefix, "topic_prefix", "", "MQTT topic prefix")	
 	var sysFsRoot string
 	flag.StringVar(&sysFsRoot, "sysfs_root", unipitt.SysFsRoot, "Root folder to search for digital inputs")
 	var configFile string

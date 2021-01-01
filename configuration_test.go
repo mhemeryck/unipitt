@@ -57,6 +57,30 @@ func TestConfigurationTopic(t *testing.T) {
 	}
 }
 
+func TestConfigurationTopicWithPrefix(t *testing.T) {
+	cases := []struct {
+		Name     string
+		Expected string
+	}{
+		{Name: "foo", Expected: "/home/qux"},
+		{Name: "bar", Expected: "/home/bar"},
+	}
+	c := Configuration{
+		Topics: map[string]string{
+			"foo": "qux",
+		},
+		Mqtt: MqttConfig{
+			TopicPrefix: "/home/",
+		},
+	}
+	for _, testCase := range cases {
+		result := c.Topic(testCase.Name)
+		if result != testCase.Expected {
+			t.Fatalf("Expected result to be %s, got %s\n", testCase.Expected, result)
+		}
+	}
+}
+
 func TestConfigurationName(t *testing.T) {
 	cases := []struct {
 		Topic    string
@@ -68,6 +92,34 @@ func TestConfigurationName(t *testing.T) {
 	c := Configuration{
 		Topics: map[string]string{
 			"qux": "foo",
+		},
+	}
+	for _, testCase := range cases {
+		result := c.Name(testCase.Topic)
+		if result != testCase.Expected {
+			t.Fatalf("Expected result to be %s, got %s\n", testCase.Expected, result)
+		}
+	}
+}
+
+func TestConfigurationNameWithPrefix(t *testing.T) {
+	cases := []struct {
+		Topic    string
+		Expected string
+	}{
+		{Topic: "/home/foo", Expected: "qux"},
+		{Topic: "/home/bar", Expected: "bar"},
+		
+		// this should not happen as the topic is not starting with
+		// the configured prefix
+		{Topic: "huh", Expected: "huh"},
+	}
+	c := Configuration{
+		Topics: map[string]string{
+			"qux": "foo",
+		},
+		Mqtt: MqttConfig{
+			TopicPrefix: "/home/",
 		},
 	}
 	for _, testCase := range cases {
