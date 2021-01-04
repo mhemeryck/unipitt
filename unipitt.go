@@ -32,7 +32,7 @@ type Handler struct {
 func NewHandler(config Configuration) (h *Handler, err error) {
 	h = &Handler{}
 
-        h.config = config
+	h.config = config
 
 	// Digital writer setup
 	h.writerMap, err = FindDigitalOutputWriters(h.config.SysFsRoot)
@@ -112,10 +112,10 @@ func (h *Handler) Poll(done chan bool, interval int) (err error) {
 			if d.Err != nil {
 				log.Printf("Found error %s for name %s\n", d.Err, d.Name)
 			} else {
-			        var payload string
+				var payload string
 				// Determine topic from config
 				log.Printf("Trigger for name %s, using topic %s\n", d.Name, h.config.Topic(d.Name))
-				if (d.Value) {
+				if d.Value {
 					payload = "ON"
 				} else {
 					payload = "OFF"

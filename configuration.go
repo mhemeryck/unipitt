@@ -11,17 +11,17 @@ import (
 // Configuration represents the topic name for the MQTT message for a given instance name
 
 type MQTTConfig struct {
-	Broker string
-	CAFile string `yaml:"ca_file"`
-	ClientID string `yaml:"client_id"`
-	Username string
-	Password string
+	Broker      string
+	CAFile      string `yaml:"ca_file"`
+	ClientID    string `yaml:"client_id"`
+	Username    string
+	Password    string
 	TopicPrefix string `yaml:"topic_prefix"`
 }
 
 type Configuration struct {
-	Topics map[string]string
-	MQTT MQTTConfig
+	Topics    map[string]string
+	MQTT      MQTTConfig
 	SysFsRoot string `yaml:"sys_fs_root"`
 }
 
@@ -37,7 +37,7 @@ func (c *Configuration) Topic(name string) string {
 func (c *Configuration) reverseTopics() map[string]string {
 	r := make(map[string]string)
 	for key, value := range c.Topics {
-		r[c.MQTT.TopicPrefix + value] = key
+		r[c.MQTT.TopicPrefix+value] = key
 	}
 	return r
 }

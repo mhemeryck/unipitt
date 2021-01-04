@@ -30,11 +30,11 @@ type DigitalOutputWriter struct {
 
 // Update writes the updated value to the digital output
 func (d *DigitalOutputWriter) Update(value bool) (err error) {
-	var value_filename string;
+	var value_filename string
 
-	value_filename = DoFilename;
+	value_filename = DoFilename
 	value_filename = d.Name[0:1] + DoFilename[1:]
-	
+
 	f, err := os.Create(path.Join(d.Path, value_filename))
 	defer f.Close()
 	if err != nil {

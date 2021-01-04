@@ -109,7 +109,7 @@ func TestConfigurationNameWithPrefix(t *testing.T) {
 	}{
 		{Topic: "/home/foo", Expected: "qux"},
 		{Topic: "/home/bar", Expected: "bar"},
-		
+
 		// this should not happen as the topic is not starting with
 		// the configured prefix
 		{Topic: "huh", Expected: "huh"},
@@ -173,11 +173,11 @@ mqtt:
 			"do_2_02": "living light",
 		},
 		MQTT: MQTTConfig{
-			Username: "mqttuser",
-			Password: "mqttpass",
-			ClientID: "foobar",
+			Username:    "mqttuser",
+			Password:    "mqttpass",
+			ClientID:    "foobar",
 			TopicPrefix: "/prefix/",
-			CAFile: "pathtocafile",
+			CAFile:      "pathtocafile",
 		},
 	}
 
