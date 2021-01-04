@@ -14,7 +14,7 @@ const (
 	// DoFalseValue digital output false value to write
 	DoFalseValue = "0\n"
 	// DoFolderRegex regular expression used for finding folders which contain digital output
-	DoFolderRegex = "[dr]o_[0-9]_[0-9]{2}"
+	DoFolderRegex = "(do|ro)_[0-9]_[0-9]{2}"
 )
 
 // DigitalOutput represents the digital outputs of the unipi board
