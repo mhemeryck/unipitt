@@ -151,6 +151,9 @@ topics:
 mqtt:
   username: mqttuser
   password: mqttpass
+  client_id: foobar
+  topic_prefix: /prefix/
+  ca_file: pathtocafile
 `)
 	if _, err := configFile.Write(content); err != nil {
 		t.Fatal(err)
@@ -172,6 +175,9 @@ mqtt:
 		Mqtt: MqttConfig{
 			Username: "mqttuser",
 			Password: "mqttpass",
+			ClientID: "foobar",
+			TopicPrefix: "/prefix/",
+			CAFile: "pathtocafile",
 		},
 	}
 
@@ -183,7 +189,7 @@ mqtt:
 		}
 	}
 	if c.Mqtt != expected.Mqtt {
-		t.Errorf("Expected Mqtt parameters to be %s but got %s\n", c.Mqtt, expected.Mqtt)
+		t.Errorf("Expected Mqtt parameters to be %s but got %s\n", expected.Mqtt, c.Mqtt)
 	}
 
 }

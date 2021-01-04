@@ -12,17 +12,17 @@ import (
 
 type MqttConfig struct {
 	Broker string
-	CAFile string
-	ClientID string
+	CAFile string `yaml:"ca_file"`
+	ClientID string `yaml:"client_id"`
 	Username string
 	Password string
-	TopicPrefix string
+	TopicPrefix string `yaml:"topic_prefix"`
 }
 
 type Configuration struct {
 	Topics map[string]string
 	Mqtt MqttConfig
-	SysFsRoot string
+	SysFsRoot string `yaml:"sys_fs_root"`
 }
 
 // Topic gets a topic (value) for a given name (key). Return the name itself as fallback
