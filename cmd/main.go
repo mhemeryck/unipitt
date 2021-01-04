@@ -67,6 +67,7 @@ func main() {
 			CAFile: caFile,
 			Username: username,
 			Password: password,
+			TopicPrefix: topicPrefix,
 		},
 	}
 
