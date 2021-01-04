@@ -40,6 +40,7 @@ func NewHandler(config Configuration) (h *Handler, err error) {
 		log.Printf("Error creating a map of digital output writers: %s\n", err)
 	}
 
+	log.Printf("connecting to mqtt server with options: %s\n", h.config.Mqtt)
 	// MQTT setup
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(h.config.Mqtt.Broker)
@@ -114,13 +115,10 @@ func (h *Handler) Poll(done chan bool, interval int) (err error) {
 			        var payload string
 				// Determine topic from config
 				log.Printf("Trigger for name %s, using topic %s\n", d.Name, h.config.Topic(d.Name))
-				switch (d.Value) {
-					case true: {
-						payload = "ON"
-					}
-					case false: {
-						payload = "OFF"
-					}
+				if (d.Value) {
+					payload = "ON"
+				} else {
+					payload = "OFF"
 				}
 				if token := h.client.Publish(h.config.Topic(d.Name), 0, false, payload); token.Wait() && token.Error() != nil {
 					go backoff.Retry(h.connect, backoff.NewExponentialBackOff())
