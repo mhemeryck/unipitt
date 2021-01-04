@@ -61,7 +61,7 @@ func main() {
 	// Initialize config from command line
 	config := unipitt.Configuration{
 		SysFsRoot: sysFsRoot,
-		Mqtt: unipitt.MqttConfig{
+		MQTT: unipitt.MQTTConfig{
 			Broker: broker,
 			ClientID: clientID,
 			CAFile: caFile,

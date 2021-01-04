@@ -10,7 +10,7 @@ import (
 
 // Configuration represents the topic name for the MQTT message for a given instance name
 
-type MqttConfig struct {
+type MQTTConfig struct {
 	Broker string
 	CAFile string `yaml:"ca_file"`
 	ClientID string `yaml:"client_id"`
@@ -21,23 +21,23 @@ type MqttConfig struct {
 
 type Configuration struct {
 	Topics map[string]string
-	Mqtt MqttConfig
+	MQTT MQTTConfig
 	SysFsRoot string `yaml:"sys_fs_root"`
 }
 
 // Topic gets a topic (value) for a given name (key). Return the name itself as fallback
 func (c *Configuration) Topic(name string) string {
 	if value, ok := c.Topics[name]; ok {
-		return c.Mqtt.TopicPrefix + value
+		return c.MQTT.TopicPrefix + value
 	}
-	return c.Mqtt.TopicPrefix + name
+	return c.MQTT.TopicPrefix + name
 }
 
 // reverseTopics construct reverse mapping of topics
 func (c *Configuration) reverseTopics() map[string]string {
 	r := make(map[string]string)
 	for key, value := range c.Topics {
-		r[c.Mqtt.TopicPrefix + value] = key
+		r[c.MQTT.TopicPrefix + value] = key
 	}
 	return r
 }
@@ -47,8 +47,8 @@ func (c *Configuration) Name(topic string) string {
 	if name, ok := c.reverseTopics()[topic]; ok {
 		return name
 	}
-	if strings.HasPrefix(topic, c.Mqtt.TopicPrefix) {
-		return topic[len(c.Mqtt.TopicPrefix):]
+	if strings.HasPrefix(topic, c.MQTT.TopicPrefix) {
+		return topic[len(c.MQTT.TopicPrefix):]
 	}
 	return topic
 }

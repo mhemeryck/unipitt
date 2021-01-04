@@ -40,17 +40,17 @@ func NewHandler(config Configuration) (h *Handler, err error) {
 		log.Printf("Error creating a map of digital output writers: %s\n", err)
 	}
 
-	log.Printf("connecting to mqtt server with options: %s\n", h.config.Mqtt)
+	log.Printf("connecting to mqtt server with options: %s\n", h.config.MQTT)
 	// MQTT setup
 	opts := mqtt.NewClientOptions()
-	opts.AddBroker(h.config.Mqtt.Broker)
-	opts.SetClientID(h.config.Mqtt.ClientID)
-	opts.SetUsername(h.config.Mqtt.Username)
-	opts.SetPassword(h.config.Mqtt.Password)
-	if h.config.Mqtt.CAFile != "" {
-		tlsConfig, err := NewTLSConfig(h.config.Mqtt.CAFile)
+	opts.AddBroker(h.config.MQTT.Broker)
+	opts.SetClientID(h.config.MQTT.ClientID)
+	opts.SetUsername(h.config.MQTT.Username)
+	opts.SetPassword(h.config.MQTT.Password)
+	if h.config.MQTT.CAFile != "" {
+		tlsConfig, err := NewTLSConfig(h.config.MQTT.CAFile)
 		if err != nil {
-			log.Printf("Error reading MQTT CA file %s: %s\n", h.config.Mqtt.CAFile, err)
+			log.Printf("Error reading MQTT CA file %s: %s\n", h.config.MQTT.CAFile, err)
 			return h, err
 		}
 		opts.SetTLSConfig(tlsConfig)

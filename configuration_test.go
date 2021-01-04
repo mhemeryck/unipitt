@@ -69,7 +69,7 @@ func TestConfigurationTopicWithPrefix(t *testing.T) {
 		Topics: map[string]string{
 			"foo": "qux",
 		},
-		Mqtt: MqttConfig{
+		MQTT: MQTTConfig{
 			TopicPrefix: "/home/",
 		},
 	}
@@ -118,7 +118,7 @@ func TestConfigurationNameWithPrefix(t *testing.T) {
 		Topics: map[string]string{
 			"qux": "foo",
 		},
-		Mqtt: MqttConfig{
+		MQTT: MQTTConfig{
 			TopicPrefix: "/home/",
 		},
 	}
@@ -172,7 +172,7 @@ mqtt:
 			"di_1_01": "kitchen switch",
 			"do_2_02": "living light",
 		},
-		Mqtt: MqttConfig{
+		MQTT: MQTTConfig{
 			Username: "mqttuser",
 			Password: "mqttpass",
 			ClientID: "foobar",
@@ -188,8 +188,8 @@ mqtt:
 			t.Errorf("Expected topic to be %s, but got %s\n", v, topic)
 		}
 	}
-	if c.Mqtt != expected.Mqtt {
-		t.Errorf("Expected Mqtt parameters to be %s but got %s\n", expected.Mqtt, c.Mqtt)
+	if c.MQTT != expected.MQTT {
+		t.Errorf("Expected Mqtt parameters to be %s but got %s\n", expected.MQTT, c.MQTT)
 	}
 
 }

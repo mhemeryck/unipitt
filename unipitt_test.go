@@ -47,7 +47,7 @@ func TestHandler(t *testing.T) {
 
 	config := Configuration{
 		SysFsRoot: sysFsRoot,
-		Mqtt: MqttConfig{
+		MQTT: MQTTConfig{
 			Broker: "mqtts://foo",
 			ClientID: "unipitt",
 		},
@@ -91,7 +91,7 @@ func TestHandler(t *testing.T) {
 func TestHandlerNoSysFsRoot(t *testing.T) {
 	config := Configuration{
 		SysFsRoot: "foo",
-		Mqtt: MqttConfig{
+		MQTT: MQTTConfig{
 			Broker: "mqtts://foo",
 			ClientID: "unipitt",
 		},
@@ -123,7 +123,7 @@ func TestHandlerCaFileIssue(t *testing.T) {
 
 	config := Configuration{
 		SysFsRoot: sysFsRoot,
-		Mqtt: MqttConfig{
+		MQTT: MQTTConfig{
 			Broker: "mqtts://foo",
 			ClientID: "unipitt",
 			CAFile: "foo",
@@ -162,7 +162,7 @@ func TestHandlerCaFile(t *testing.T) {
 
 	config := Configuration{
 		SysFsRoot: sysFsRoot,
-		Mqtt: MqttConfig{
+		MQTT: MQTTConfig{
 			Broker: "mqtts://foo",
 			ClientID: "unipitt",
 			CAFile: caFile,
