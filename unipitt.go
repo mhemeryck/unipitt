@@ -73,7 +73,7 @@ func NewHandler(config Configuration) (h *Handler, err error) {
 			// Also subscribe any given mapped topic for the names
 			topic := h.config.Topic(name)
 			if token := c.Subscribe(topic, 0, cb); token.Wait() && token.Error() != nil {
-				log.Print(err)
+				log.Print(token.Error())
 			}
 		}
 	}
