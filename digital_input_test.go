@@ -125,8 +125,7 @@ func TestUpdate(t *testing.T) {
 	}
 	events := make(chan *DigitalInputReader)
 	defer close(events)
-	i := 0
-	for _, testCase := range cases {
+	for i, testCase := range cases {
 		f.Seek(0, 0)
 		_, err := f.WriteString(testCase.Contents)
 		if err != nil {
@@ -141,7 +140,6 @@ func TestUpdate(t *testing.T) {
 			// Check it's true
 			t.Fatalf("Expected value %t, got %t, index %d\n", testCase.Expected, digitalInput.Value, i)
 		}
-		i++
 	}
 }
 
