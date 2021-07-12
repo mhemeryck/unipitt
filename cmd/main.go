@@ -4,7 +4,7 @@ import (
 	"flag"
 	"log"
 
-	"github.com/mhemeryck/unipitt"
+	"unipitt"
 )
 
 // Current program version info, injected at build time
@@ -40,10 +40,14 @@ func main() {
 	flag.StringVar(&broker, "broker", "ssl://raspberrypi.lan:8883", "MQTT broker URI")
 	var clientID string
 	flag.StringVar(&clientID, "client_id", "unipitt", "MQTT host client ID")
+	var username string
+	flag.StringVar(&username, "username", "", "MQTT username")
+	var password string
+	flag.StringVar(&password, "password", "", "MQTT password")	
+	var topicPrefix string
+	flag.StringVar(&topicPrefix, "topic_prefix", "", "MQTT topic prefix")	
 	var sysFsRoot string
 	flag.StringVar(&sysFsRoot, "sysfs_root", unipitt.SysFsRoot, "Root folder to search for digital inputs")
-	var payload string
-	flag.StringVar(&payload, "payload", Payload, "Default MQTT message payload")
 	var configFile string
 	flag.StringVar(&configFile, "config", "", "Config file name")
 	flag.Parse()
@@ -54,8 +58,30 @@ func main() {
 		return
 	}
 
+	// Initialize config from command line
+	config := unipitt.Configuration{
+		SysFsRoot: sysFsRoot,
+		MQTT: unipitt.MQTTConfig{
+			Broker: broker,
+			ClientID: clientID,
+			CAFile: caFile,
+			Username: username,
+			Password: password,
+			TopicPrefix: topicPrefix,
+		},
+	}
+
+	// Check if there's a config to be read
+	if configFile != "" {
+		log.Printf("Reading configuration file %s\n", configFile)
+		err := unipitt.UpdateConfigFromFile(configFile, &config)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	// Setup handler
-	handler, err := unipitt.NewHandler(broker, clientID, caFile, sysFsRoot, configFile)
+	handler, err := unipitt.NewHandler(config)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -64,5 +90,5 @@ func main() {
 	// Start polling (blocking)
 	done := make(chan bool)
 	defer close(done)
-	handler.Poll(done, pollingInterval, payload)
+	handler.Poll(done, pollingInterval)
 }

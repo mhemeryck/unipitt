@@ -73,7 +73,7 @@ func TestUpdateDigitalOutputWriterBogusFolder(t *testing.T) {
 }
 
 func TestFindDigitalOutputWriters(t *testing.T) {
-	folder := "do_2_01"
+	folder := "ro_2_01"
 
 	// Create temporary folder, only if it does not exist already
 	sysFsRoot, err := ioutil.TempDir("", "unipitt")

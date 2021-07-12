@@ -57,6 +57,30 @@ func TestConfigurationTopic(t *testing.T) {
 	}
 }
 
+func TestConfigurationTopicWithPrefix(t *testing.T) {
+	cases := []struct {
+		Name     string
+		Expected string
+	}{
+		{Name: "foo", Expected: "/home/qux"},
+		{Name: "bar", Expected: "/home/bar"},
+	}
+	c := Configuration{
+		Topics: map[string]string{
+			"foo": "qux",
+		},
+		MQTT: MQTTConfig{
+			TopicPrefix: "/home/",
+		},
+	}
+	for _, testCase := range cases {
+		result := c.Topic(testCase.Name)
+		if result != testCase.Expected {
+			t.Fatalf("Expected result to be %s, got %s\n", testCase.Expected, result)
+		}
+	}
+}
+
 func TestConfigurationName(t *testing.T) {
 	cases := []struct {
 		Topic    string
@@ -78,8 +102,36 @@ func TestConfigurationName(t *testing.T) {
 	}
 }
 
+func TestConfigurationNameWithPrefix(t *testing.T) {
+	cases := []struct {
+		Topic    string
+		Expected string
+	}{
+		{Topic: "/home/foo", Expected: "qux"},
+		{Topic: "/home/bar", Expected: "bar"},
+
+		// this should not happen as the topic is not starting with
+		// the configured prefix
+		{Topic: "huh", Expected: "huh"},
+	}
+	c := Configuration{
+		Topics: map[string]string{
+			"qux": "foo",
+		},
+		MQTT: MQTTConfig{
+			TopicPrefix: "/home/",
+		},
+	}
+	for _, testCase := range cases {
+		result := c.Name(testCase.Topic)
+		if result != testCase.Expected {
+			t.Fatalf("Expected result to be %s, got %s\n", testCase.Expected, result)
+		}
+	}
+}
+
 func TestConfigFromFileNonExistant(t *testing.T) {
-	_, err := configFromFile("foo")
+	_, err := ReadConfigFromFile("foo")
 	if err == nil {
 		t.Fatalf("Expected an error to occur reading non-existent file, got not none")
 	}
@@ -96,6 +148,12 @@ func TestConfigFromFile(t *testing.T) {
 topics:
   di_1_01: kitchen switch
   do_2_02: living light
+mqtt:
+  username: mqttuser
+  password: mqttpass
+  client_id: foobar
+  topic_prefix: /prefix/
+  ca_file: pathtocafile
 `)
 	if _, err := configFile.Write(content); err != nil {
 		t.Fatal(err)
@@ -104,7 +162,7 @@ topics:
 		t.Fatal(err)
 	}
 
-	c, err := configFromFile(configFile.Name())
+	c, err := ReadConfigFromFile(configFile.Name())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -114,6 +172,13 @@ topics:
 			"di_1_01": "kitchen switch",
 			"do_2_02": "living light",
 		},
+		MQTT: MQTTConfig{
+			Username:    "mqttuser",
+			Password:    "mqttpass",
+			ClientID:    "foobar",
+			TopicPrefix: "/prefix/",
+			CAFile:      "pathtocafile",
+		},
 	}
 
 	for k, v := range expected.Topics {
@@ -122,6 +187,9 @@ topics:
 		} else if topic != v {
 			t.Errorf("Expected topic to be %s, but got %s\n", v, topic)
 		}
+	}
+	if c.MQTT != expected.MQTT {
+		t.Errorf("Expected Mqtt parameters to be %s but got %s\n", expected.MQTT, c.MQTT)
 	}
 
 }
@@ -142,7 +210,7 @@ func TestConfigFromFileUnmarshalIssue(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = configFromFile(configFile.Name())
+	_, err = ReadConfigFromFile(configFile.Name())
 	if err == nil {
 		t.Fatal("Expected an error on unmarshalling, got none")
 	}
