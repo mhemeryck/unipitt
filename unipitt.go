@@ -34,11 +34,6 @@ func NewHandler(config Configuration) (h *Handler, err error) {
 
 	h.config = config
 
-	// Digital writer setup
-	h.writerMap, err = FindDigitalOutputWriters(h.config.SysFsRoot)
-	if err != nil {
-		log.Printf("Error creating a map of digital output writers: %s\n", err)
-	}
 
 	log.Printf("connecting to mqtt server with options: %s\n", h.config.MQTT)
 	// MQTT setup
@@ -60,7 +55,7 @@ func NewHandler(config Configuration) (h *Handler, err error) {
 	var cb mqtt.MessageHandler = func(c mqtt.Client, msg mqtt.Message) {
 		log.Printf("Handling message on topic %s\n", msg.Topic())
 		// Find corresponding writer
-		if writer, ok := h.writerMap[h.config.Name(msg.Topic())]; ok {
+		if writer, ok := h.writerMap[h.config.Name(msg.Topic(), "/set")]; ok {
 			err := writer.Update(string(msg.Payload()) == MsgTrueValue)
 			if err != nil {
 				log.Printf("Error updating digital output with name %s: %s\n", writer.Name, err)
@@ -72,18 +67,20 @@ func NewHandler(config Configuration) (h *Handler, err error) {
 	opts.OnConnect = func(c mqtt.Client) {
 		for name := range h.writerMap {
 			// Also subscribe any given mapped topic for the names
-			topic := h.config.Topic(name)
+			topic := h.config.Topic(name, "/set")
+			log.Printf("Subscribing MQTT topic %s", topic)
 			if token := c.Subscribe(topic, 0, cb); token.Wait() && token.Error() != nil {
 				log.Print(token.Error())
 			}
 		}
 	}
 
-	h.client = mqtt.NewClient(opts)
-	err = h.connect()
+	// Digital writer setup
+	h.writerMap, err = FindDigitalOutputWriters(h.config.SysFsRoot)
 	if err != nil {
-		log.Printf("Error connecting to MQTT broker: %s\n ...", err)
+		log.Printf("Error creating a map of digital output writers: %s\n", err)
 	}
+	log.Printf("Found %d digital output writer instances from path %d\n", len(h.writerMap), h.config.SysFsRoot)
 
 	// Digital Input reader setup
 	h.readers, err = FindDigitalInputReaders(h.config.SysFsRoot)
@@ -92,6 +89,11 @@ func NewHandler(config Configuration) (h *Handler, err error) {
 	}
 	log.Printf("Created %d digital input reader instances from path %s\n", len(h.readers), h.config.SysFsRoot)
 
+	h.client = mqtt.NewClient(opts)
+	err = h.connect()
+	if err != nil {
+		log.Printf("Error connecting to MQTT broker: %s\n ...", err)
+	}
 	return
 }
 
@@ -100,9 +102,16 @@ func (h *Handler) Poll(done chan bool, interval int) (err error) {
 	events := make(chan *DigitalInputReader)
 
 	// Start polling
-	log.Printf("Initiate polling for %d readers\n", len(h.readers))
-	for k := range h.readers {
-		go h.readers[k].Poll(events, interval)
+	for _, reader := range h.readers {
+		go func(r DigitalInputReader) {
+			r.Poll(events, interval)
+		}(reader)
+	}
+
+	for _, writer := range h.writerMap {
+		go func(w DigitalOutputWriter) {
+			w.Reader.Poll(events, interval)
+		}(writer)
 	}
 
 	// Publish on a trigger
@@ -111,16 +120,18 @@ func (h *Handler) Poll(done chan bool, interval int) (err error) {
 		case d := <-events:
 			if d.Err != nil {
 				log.Printf("Found error %s for name %s\n", d.Err, d.Name)
+				d.Err = nil
 			} else {
 				var payload string
 				// Determine topic from config
-				log.Printf("Trigger for name %s, using topic %s\n", d.Name, h.config.Topic(d.Name))
 				if d.Value {
 					payload = "ON"
 				} else {
 					payload = "OFF"
 				}
-				if token := h.client.Publish(h.config.Topic(d.Name), 0, false, payload); token.Wait() && token.Error() != nil {
+				topic := h.config.Topic(d.Name, "/state")
+				log.Printf("Trigger for name %s, using topic %s payload %s\n", d.Name, topic, payload)
+				if token := h.client.Publish(topic, 0, true, payload); token.Wait() && token.Error() != nil {
 					go backoff.Retry(h.connect, backoff.NewExponentialBackOff())
 				}
 			}

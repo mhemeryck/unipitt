@@ -26,16 +26,18 @@ type DigitalOutput interface {
 type DigitalOutputWriter struct {
 	Name string
 	Path string
+	Reader *DigitalInputReader
+}
+
+func formatFilename(name string) (filename string) {
+	return name[0:1] + DoFilename[1:]
 }
 
 // Update writes the updated value to the digital output
 func (d *DigitalOutputWriter) Update(value bool) (err error) {
-	var value_filename string
+	vfn := formatFilename(d.Name)
 
-	value_filename = DoFilename
-	value_filename = d.Name[0:1] + DoFilename[1:]
-
-	f, err := os.Create(path.Join(d.Path, value_filename))
+	f, err := os.Create(path.Join(d.Path, vfn))
 	defer f.Close()
 	if err != nil {
 		return err
@@ -47,16 +49,22 @@ func (d *DigitalOutputWriter) Update(value bool) (err error) {
 		_, err = f.WriteString(DoFalseValue)
 	}
 	if err == nil {
-		log.Printf("Update value of digital output %s to %t in file %s\n", d.Name, value, value_filename)
+		log.Printf("Update value of digital output %s to %t in file %s\n", d.Name, value, vfn)
 	}
 	return err
 }
 
 // NewDigitalOutputWriter creates a new digital output writer instance from a a given matching folder
-func NewDigitalOutputWriter(folder string) (d *DigitalOutputWriter) {
+func NewDigitalOutputWriter(folder string) (d *DigitalOutputWriter, err error) {
 	// Read name as the trailing folder path
 	_, name := path.Split(folder)
-	return &DigitalOutputWriter{Name: name, Path: folder}
+	vfn := formatFilename(name)
+	reader, err := NewDigitalInputReader(folder, name, vfn)
+	log.Printf("Creating digital output name %s folder %s filename %s\n", name, folder, vfn)
+	if err != nil {
+		return nil, err
+	}
+	return &DigitalOutputWriter{Name: name, Path: folder, Reader: reader}, nil
 }
 
 // FindDigitalOutputWriters generates the output writes from a given path
@@ -70,8 +78,12 @@ func FindDigitalOutputWriters(root string) (writerMap map[string]DigitalOutputWr
 	writerMap = make(map[string]DigitalOutputWriter)
 	var d *DigitalOutputWriter
 	for _, path := range paths {
-		d = NewDigitalOutputWriter(path)
-		writerMap[d.Name] = *d
+		d, err = NewDigitalOutputWriter(path)
+		if err != nil {
+			log.Println(err)
+		} else {
+			writerMap[d.Name] = *d
+		}
 	}
 	return
 }

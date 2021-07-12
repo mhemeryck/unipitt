@@ -26,29 +26,33 @@ type Configuration struct {
 }
 
 // Topic gets a topic (value) for a given name (key). Return the name itself as fallback
-func (c *Configuration) Topic(name string) string {
+func (c *Configuration) Topic(name string, suffix string) string {
 	if value, ok := c.Topics[name]; ok {
-		return c.MQTT.TopicPrefix + value
+		return c.MQTT.TopicPrefix + value + suffix
 	}
-	return c.MQTT.TopicPrefix + name
+	return c.MQTT.TopicPrefix + name + suffix
 }
 
 // reverseTopics construct reverse mapping of topics
-func (c *Configuration) reverseTopics() map[string]string {
+func (c *Configuration) reverseTopics(suffix string) map[string]string {
 	r := make(map[string]string)
 	for key, value := range c.Topics {
-		r[c.MQTT.TopicPrefix+value] = key
+		r[c.MQTT.TopicPrefix+value+suffix] = key
 	}
 	return r
 }
 
 // Name reverse mapping of topic for given name. In case nothing is found, just return the topic itself, hoping there's a mapped instance for it
-func (c *Configuration) Name(topic string) string {
-	if name, ok := c.reverseTopics()[topic]; ok {
+func (c *Configuration) Name(topic string, suffix string) string {
+	if name, ok := c.reverseTopics(suffix)[topic]; ok {
 		return name
 	}
+	
+	if strings.HasSuffix(topic, suffix) {
+		topic = topic[:len(topic)-len(suffix)]
+	}
 	if strings.HasPrefix(topic, c.MQTT.TopicPrefix) {
-		return topic[len(c.MQTT.TopicPrefix):]
+		topic = topic[len(c.MQTT.TopicPrefix):]
 	}
 	return topic
 }

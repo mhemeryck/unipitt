@@ -4,7 +4,7 @@ import (
 	"flag"
 	"log"
 
-	"github.com/mhemeryck/unipitt"
+	"unipitt"
 )
 
 // Current program version info, injected at build time

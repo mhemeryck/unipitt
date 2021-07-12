@@ -18,7 +18,7 @@ const (
 
 // DigitalInput interface for doing the polling
 type DigitalInput interface {
-	Update(chan *DigitalInput) error
+	Update(chan *DigitalInput, bool) error
 	Poll(chan *DigitalInput, int)
 	Close()
 }
@@ -33,19 +33,23 @@ type DigitalInputReader struct {
 }
 
 // Update reads the value and sets the new value
-func (d *DigitalInputReader) Update(events chan *DigitalInputReader) (err error) {
+func (d *DigitalInputReader) Update(events chan *DigitalInputReader, force bool) (err error) {
 	// Read the first byte
 	d.f.Seek(0, 0)
 	b := make([]byte, 1)
 	_, err = d.f.Read(b)
 	// Check it's true
 	value := string(b) == DiTrueValue
-	// Push out an event in case of a leading edge
-	if d.Value != value {
-		events <- d
-	}
+
+	// Push out an event in case of a change or force
+	send := d.Value != value || force
+
 	// Update value
 	d.Value = value
+
+	if send {
+		events <- d
+	}
 	return
 }
 
@@ -54,11 +58,13 @@ func (d *DigitalInputReader) Poll(events chan *DigitalInputReader, interval int)
 	ticker := time.NewTicker(time.Duration(interval) * time.Millisecond)
 	defer ticker.Stop()
 
+	log.Printf("Initiate polling for digital input %s\n", d.Name)
+	err := d.Update(events, true)
 	count := 0
 	for {
 		select {
 		case <-ticker.C:
-			err := d.Update(events)
+			err = d.Update(events, false)
 			if err != nil {
 				d.Err = err
 				events <- d
@@ -67,7 +73,7 @@ func (d *DigitalInputReader) Poll(events chan *DigitalInputReader, interval int)
 			}
 			if count%100 == 0 {
 				count = 0
-				log.Printf("Polling digital input %s ...\n", d.Name)
+				log.Printf("Polling digital input %s, current value %t ...\n", d.Name, d.Value)
 			}
 			count++
 		}
@@ -80,8 +86,11 @@ func (d *DigitalInputReader) Close() error {
 }
 
 // NewDigitalInputReader creates a new DigitalInput and opens the file handle
-func NewDigitalInputReader(folder string, name string) (d *DigitalInputReader, err error) {
-	f, err := os.Open(path.Join(folder, DiFilename))
+func NewDigitalInputReader(folder string, name string, value_filename string) (d *DigitalInputReader, err error) {
+	d = nil
+	vfn := value_filename
+	log.Printf("Creating digital input name %s folder %s, filename %s\n", name, folder, vfn)
+	f, err := os.Open(path.Join(folder, vfn))
 	d = &DigitalInputReader{Name: name, Path: folder, f: f}
 	return
 }
@@ -99,9 +108,9 @@ func FindDigitalInputReaders(root string) (readers []DigitalInputReader, err err
 	for k, folder := range paths {
 		// Read name as the trailing folder path
 		_, name := path.Split(folder)
-		digitalInputReader, err := NewDigitalInputReader(folder, name)
+		digitalInputReader, err := NewDigitalInputReader(folder, name, DiFilename)
 		if err != nil {
-			log.Print(err)
+			log.Printf("Error constructing digital input reader %s with error %s", name, err)
 		}
 		readers[k] = *digitalInputReader
 	}
